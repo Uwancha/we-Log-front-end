@@ -1,35 +1,60 @@
 "use client";
 
+/**
+ * Register component.
+ * This component handles user registration by collecting credentials,
+ * send request to the API and handling responses.
+ */
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
+  // State to track user form inputs 
   const [credentials , setCredentials] = useState({name: '', email: '', password: '', confirmPswd: ''});
+
+  // State to track error and pending state
   const [error, setError] = useState('');
+  const [submitStatus, setSubmitStatus] = useState('');
 
-  const router = useRouter()
+  // Hook to conditionally navigate pages
+  const router = useRouter();
   
+  // API URL
   const url = process.env.API_URL || 'http://localhost:4000/'
-    
+   
+  // Send registration request to the api
   const handleRegister = async () => {
-      
-  const response = await fetch(`${url}api/signup`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(credentials)
-  })
+    try {
+      // Make POST request to registration endpoint
+      const res = await fetch(`${url}api/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      })
 
-  if (response.ok) {
-    router.push('/login');
-  } else {
-    setError(response.message)
+      // Check response status and handle succes and failure
+      if (res.ok) {
+        router.push('/login');
+        setError('');
+        setSubmitStatus('');
+      } else {
+        setSubmitStatus('');
+        setError('Please enter valid data.');
+      }
+
+    } catch (error) {
+      // Handle unexpected errors
+      setSubmitStatus('')
+      setError('An error has occurred. Try again!')
     }
   };
 
+  // Submit form handler
   const handleSubmit = (e) => {
     e.preventDefault();
+    setSubmitStatus('Registering...')
     handleRegister();
   };
   
@@ -81,8 +106,11 @@ export default function Register() {
             required
           />
         </label>
-  
-        <button type="submit">Register</button>
+
+        <p>{error}</p>
+        <button type="submit">
+          {submitStatus? submitStatus : 'Register'}
+        </button>
       </form>
     </main>
   )
