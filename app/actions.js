@@ -1,6 +1,6 @@
 'use server'
 
-const { redirect } = require("next/navigation")
+import { redirect } from "next/navigation"
 
 export async function register(formData) {
     const credentials = {
