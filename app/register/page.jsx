@@ -1,77 +1,49 @@
-"use client";
-
 /**
  * Register component.
  * This component handles user registration by collecting credentials,
- * send request to the API and handling responses.
+ * send them to server action. Then the server action handles request to the API and responses.
  */
-import { useState } from "react";
+'use client'
+
+import { useRef } from "react";
+import { useFormState } from "react-dom";
+import { register } from "../actions";
+import { SubmitButton } from "../components/SubmitButton";
 import { useRouter } from "next/navigation";
 
 export default function Register() {
-  // State to track user form inputs 
-  const [credentials , setCredentials] = useState({name: '', email: '', password: '', confirmPswd: ''});
+  const formRef = useRef(null);
 
-  // State to track error and pending state
-  const [error, setError] = useState('');
-  const [submitStatus, setSubmitStatus] = useState('');
+  // Destructure server action and its response from useFormState
+  const [formState, formAction] = useFormState(register, {
+    success: false, message: '', error: null
+  });
 
-  // Hook to conditionally navigate pages
+  // Navigate user to login page on success response from the server action
   const router = useRouter();
-  
-  // API URL
-  const url = process.env.API_URL || 'http://localhost:4000/'
-   
-  // Send registration request to the api
-  const handleRegister = async () => {
-    try {
-      // Make POST request to registration endpoint
-      const res = await fetch(`${url}api/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      })
-
-      // Check response status and handle succes and failure
-      if (res.ok) {
-        router.push('/login');
-        setError('');
-        setSubmitStatus('');
-      } else {
-        setSubmitStatus('');
-        setError('Please enter valid data.');
-      }
-
-    } catch (error) {
-      // Handle unexpected errors
-      setSubmitStatus('')
-      setError('An error has occurred. Try again!')
-    }
+  if (formState?.success) {
+    formRef.current?.reset();
+    router.push('/login')
   };
 
-  // Submit form handler
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitStatus('Registering...')
-    handleRegister();
-  };
-  
   return (
     <main>
       <h1>Register</h1>
   
-      <form onSubmit={handleSubmit}>
+      {/** On form submit send form data to server action */}
+      <form ref={formRef} action={formAction}>
         <label htmlFor="name">
           Name
           <input
             type="text"
             id="name"
-            value={credentials.name}
-            onChange={(e) => setCredentials({...credentials, name: e.target.value})}
+            name="name"
+            minLength={3}
             required
           />
+          <span className="text-red">
+            {formState?.error?.name ? formState.error.name : '' }
+          </span>
         </label>
   
         <label htmlFor="email">
@@ -79,10 +51,12 @@ export default function Register() {
           <input 
             type="email"
             id="email"
-            value={credentials.email}
-            onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+            name="email"
             required
           />
+          <span className="text-red">
+            {formState?.error?.email ? formState.error.email : '' }
+          </span>
         </label>
   
         <label htmlFor="password">
@@ -90,27 +64,31 @@ export default function Register() {
           <input
             type="password" 
             id="password"
-            value={credentials.password}
-            onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+            name="password"
+            min={8}
             required
           />
+          <span className="text-red">
+            {formState?.error?.password ? formState.error.name : '' }
+          </span>
         </label>
 
         <label htmlFor="confirmPswd">
-          Password
+          Confirm Password
           <input
             type="password" 
             id="confirmPswd"
-            value={credentials.confirmPswd}
-            onChange={(e) => setCredentials({...credentials, confirmPswd: e.target.value})}
+            name="confirmPwsd"
+            min={8}
             required
           />
+          <span className="text-red">
+            {formState?.error?.confirm ? formState.error.confirm : '' }
+          </span>
         </label>
 
-        <p>{error}</p>
-        <button type="submit">
-          {submitStatus? submitStatus : 'Register'}
-        </button>
+        <p className="text-red">{formState?.message}</p>
+        <SubmitButton text={'Register'} />
       </form>
     </main>
   )
