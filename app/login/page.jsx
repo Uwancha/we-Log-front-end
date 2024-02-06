@@ -1,75 +1,39 @@
 'use client'
 
-import React from 'react';
-import { useState } from 'react';
-import { useAuth } from '../utils/auth';
-import { useRouter } from 'next/navigation';
+import { login } from "../actions";
+import {useFormState} from "react-dom"
+import { SubmitButton } from "../components/SubmitButton";
+import { useRef } from "react";
+import { useRouter } from "next/router";
 
 export default function Login() {
-  const { setUser } = useAuth();
-  const [credentials, setCredentials] = useState({email: '', password: ''});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const url = process.env.API_URL || 'http://localhost:4000/'
-
-  const router = useRouter();
-
-  const handleLogin = async () => {
-    try {
-      const res = await fetch(`${url}api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials)
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setUser({
-          email: data.user.email,
-          name: data.user.name, 
-          id: data.user._id
-        } )
-
-        setCredentials({email: '', password: ''})
-        setLoading(false);
-        setError('');
-
-        router.push('/profile')
-      } else {
-        setLoading(false);
-        setError('Invalid inputs. Please enter valid email and password!')
-      };
-    } catch (error) {
-      console.log(error)
-      setError('Something went wrong. Please try again!');
-    }
-
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    handleLogin();
-  }
-
+  const formRef = useRef(null)
+  const [formState, formAction] = useFormState(login, {
+    success: false, message: '', error: null, 
+  })
+  
+  const router = useRouter()
+  if (formState?.success) {
+    formRef.current?.reset();
+    router.push('/profile')
+  }; 
+  
   return (
     <main>
       <h1>Login</h1>
   
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} action={formAction}>
         <label htmlFor="email">
           Email
           <input 
             type="email"
             id="email"
-            value={credentials.email}
-            onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+            name="email"
             required
           />
+          <span>
+            {formState?.error?.email}
+          </span>
         </label>
   
         <label htmlFor="password">
@@ -77,17 +41,17 @@ export default function Login() {
           <input
             type="password" 
             id="password"
-            value={credentials.password}
-            onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+            name="password"
             required
           />
+          <span>
+            {formState?.error?.password}
+          </span>
         </label>
 
-        <p>{error}</p>
-        <button type="submit" disabled={loading ? true : false}>
-          Login
-        </button>
+        <p>{formState?.message}</p>
+        <SubmitButton text={'Login'} />
       </form>
     </main>
   )
-}
+} 
