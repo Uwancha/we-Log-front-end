@@ -10,12 +10,11 @@ const getAllPosts = async () => {
       }
     })
 
-    if (res.ok) {
-      return res.json()
-    } else {
-      throw new Error('Failed to fetch!')
+    if (!res.ok) {
+      throw new Error('Server error. Failed to fetch!')
     }
 
+    return res.json()
   } catch (error) {
     throw new Error('Something went wrong!')
   }
