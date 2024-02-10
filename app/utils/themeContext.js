@@ -4,7 +4,7 @@ import { createContext, useContext, useState } from "react";
 const ThemeContext = createContext(null);
 
 // Create theme context provider. This will provide theme context to those that it wraps
-export const ThemeContextprovider = (children) => {
+export const ThemeContextProvider = ({ children }) => {
     const [theme, setTheme] = useState('light');
 
     return (
